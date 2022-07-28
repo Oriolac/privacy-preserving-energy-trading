@@ -24,6 +24,3 @@ jobs:
       - name: Lint with black
         run: |
           python -m black .
-      - name: Test with unittest
-        run: |
-          python -m unittest tests
