@@ -1,0 +1,9 @@
+consumption = "consumption.csv"
+
+[crypt]
+p = 19
+q = 17
+
+[environment]
+small = 10
+big = 20
