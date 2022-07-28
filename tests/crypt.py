@@ -6,9 +6,7 @@ from sage.rings.finite_rings.integer_mod import mod
 from data import PrivRSA, PubRSA
 
 
-
 class TestRSA(utest.TestCase):
-
     def setUp(self) -> None:
         self.ps = [17]
         self.qs = [19]
@@ -32,4 +30,3 @@ class TestRSA(utest.TestCase):
         privRSA = PrivRSA(n, d, e, phi)
         pubRSA = PubRSA(n, e, phi)
         self.assertEqual(privRSA.hash(3), pubRSA.hash(3))
-

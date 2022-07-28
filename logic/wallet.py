@@ -20,6 +20,7 @@ async def get_num_coins_from_neg_total(total) -> int:
     """
     return int(math.ceil((-total) / 10))
 
+
 def add_coins_to_smart_meter(sm, concentrator, it):
     create_coins(sm, concentrator, it=it)
     return sm

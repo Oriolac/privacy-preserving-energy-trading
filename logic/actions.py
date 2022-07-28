@@ -7,11 +7,12 @@ from logic.acquisition import create_coin
 
 
 class Locker:
-
     def __init__(self):
         self.lock = asyncio.Lock()
 
-    async def send_invalidate_request(self, agg: Concentrator, meter: SmartMeter, last_coins: int):
+    async def send_invalidate_request(
+        self, agg: Concentrator, meter: SmartMeter, last_coins: int
+    ):
         for i in range(last_coins):
             logging.info("Invalidate request from", meter.id)
             invalidation: InvalidationRequest = meter.create_invalidation_request()
@@ -19,7 +20,9 @@ class Locker:
                 ack = agg.receive_invalidation_request(invalidation)
             meter.check_invalidation_request(invalidation, ack)
 
-    async def send_invalidate_offer(self, agg: Concentrator, meter: SmartMeter, last_coins: int):
+    async def send_invalidate_offer(
+        self, agg: Concentrator, meter: SmartMeter, last_coins: int
+    ):
         for i in range(last_coins):
             logging.info(f"Invalidate offer from {meter.id}")
             invalidation = meter.create_invalidation_offer()
@@ -27,7 +30,9 @@ class Locker:
                 ack = agg.receive_invalidation_offer(invalidation)
             meter.check_invalidation_offer(invalidation, ack)
 
-    async def energy_matching(self, concentrator: Concentrator, producer: SmartMeter, consumer: SmartMeter):
+    async def energy_matching(
+        self, concentrator: Concentrator, producer: SmartMeter, consumer: SmartMeter
+    ):
         logging.info(f"Energy Matching. Producer: {producer} // Consumer: {consumer}")
         async with self.lock:
             pairing = concentrator.generate_pairing()
@@ -54,5 +59,7 @@ class Locker:
 
     async def write_coins(self, i, meter):
         async with self.lock:
-            with open('coins.csv', 'a') as file_coins:
-                file_coins.write(f"{meter.id},{i},{len(meter.coins)},{len(meter.current_offers)},{len(meter.current_requests)}\n")
+            with open("coins.csv", "a") as file_coins:
+                file_coins.write(
+                    f"{meter.id},{i},{len(meter.coins)},{len(meter.current_offers)},{len(meter.current_requests)}\n"
+                )

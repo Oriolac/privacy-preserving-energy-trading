@@ -5,8 +5,19 @@ from typing import List, Any, Tuple, Dict
 from sage.all import ZZ
 from sage.arith.misc import xgcd, gcd
 
-from data import PubRSA, Coin, Producer, Offer, Request, Pairing, Receipt, Payment, PrivRSA, InvalidationRequest, \
-    InvalidationOffer
+from data import (
+    PubRSA,
+    Coin,
+    Producer,
+    Offer,
+    Request,
+    Pairing,
+    Receipt,
+    Payment,
+    PrivRSA,
+    InvalidationRequest,
+    InvalidationOffer,
+)
 
 
 @dto.dataclass
@@ -21,7 +32,7 @@ class SmartMeter:
 
     def get_pub_msg(self, message):
         self.randint = (randint(3, 50)) % self.rsa.N
-        return self.rsa.hash(message) * (self.randint ** self.rsa.pub) % self.rsa.N
+        return self.rsa.hash(message) * (self.randint**self.rsa.pub) % self.rsa.N
 
     def get_sign(self, pseudo_sign):
         _, inv_int, _ = xgcd(self.randint, self.rsa.N)
@@ -107,7 +118,7 @@ class Concentrator:
     last_request_id = 0
 
     def pseudo_sign(self, m):
-        return (m ** self.rsa.priv) % self.rsa.N
+        return (m**self.rsa.priv) % self.rsa.N
 
     def get_last_offer(self) -> int:
         return self.last_offer_id
@@ -117,12 +128,12 @@ class Concentrator:
 
     def add_offer(self, offer: Offer):
         # Check offer.id is not in offers
-        self.offers[offer.id] = (offer)
+        self.offers[offer.id] = offer
         self.last_offer_id += 1
 
     def add_request(self, request: Request):
         # Check request.id is not in requests
-        self.requests[request.id] = (request)
+        self.requests[request.id] = request
         self.last_request_id += 1
 
     def generate_pairing(self):

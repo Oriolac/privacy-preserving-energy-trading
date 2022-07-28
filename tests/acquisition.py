@@ -6,7 +6,6 @@ from data.actors import SmartMeter, Concentrator
 
 
 class TestOneSmartMeter(utest.TestCase):
-
     def setUp(self):
         self.P = 17
         self.Q = 19

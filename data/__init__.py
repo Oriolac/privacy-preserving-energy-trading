@@ -21,11 +21,14 @@ class Offer:
     public_key: Any
 
     def encrypt_coin(self, coin) -> Tuple[int, int]:
-        return (coin.value ** self.public_key % self.N, coin.sign ** self.public_key % self.N)
+        return (
+            coin.value**self.public_key % self.N,
+            coin.sign**self.public_key % self.N,
+        )
 
     def encrypt_tuple(self, coin, receipt) -> Tuple[Tuple[int, int], int]:
         cipher = self.encrypt_coin(coin)
-        return cipher, receipt.value ** self.public_key % self.N
+        return cipher, receipt.value**self.public_key % self.N
 
 
 @dto.dataclass
@@ -46,18 +49,21 @@ class Producer:
     public_key: int
 
     def encrypt_coin(self, coin):
-        return (coin.value ** self.public_key % self.N, coin.sign ** self.public_key % self.N)
+        return (
+            coin.value**self.public_key % self.N,
+            coin.sign**self.public_key % self.N,
+        )
 
     def decrypt_coin(self, a, b):
-        return Coin(a ** self.private_key % self.N, b ** self.private_key % self.N)
+        return Coin(a**self.private_key % self.N, b**self.private_key % self.N)
 
     def encrypt_tuple(self, coin, receipt):
         cipher = self.encrypt_coin(coin)
-        return cipher, receipt.value ** self.public_key % self.N
+        return cipher, receipt.value**self.public_key % self.N
 
     def decrypt_tuple(self, a, b):
         coin = self.decrypt_coin(*a)
-        return coin, Receipt(b ** self.private_key % self.N)
+        return coin, Receipt(b**self.private_key % self.N)
 
 
 @dto.dataclass

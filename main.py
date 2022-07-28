@@ -10,7 +10,11 @@ from data import PubRSA
 from data.actors import SmartMeter, Concentrator
 from logic.actions import Locker
 from logic.crypt import get_pub_priv_keys
-from logic.wallet import get_num_coins_from_pos_total, get_num_coins_from_neg_total, add_coins_to_smart_meter
+from logic.wallet import (
+    get_num_coins_from_pos_total,
+    get_num_coins_from_neg_total,
+    add_coins_to_smart_meter,
+)
 
 
 def smart_meters(pubRSA: PubRSA):
@@ -26,17 +30,22 @@ async def meter_thread(concentrator, meter: SmartMeter, df, type_: str, locker: 
 
     for i in range(df.shape[0] // 10):
         total_energy = await get_total_energy(df, i, isize)
-        await manage_requests_and_offers(locker, concentrator, meter, total_energy, last_total_energy)
+        await manage_requests_and_offers(
+            locker, concentrator, meter, total_energy, last_total_energy
+        )
         last_total_energy = total_energy
         await locker.write_coins(i, meter)
         await asyncio.sleep(3)
 
 
-async def manage_requests_and_offers(locker, concentrator, meter: SmartMeter, total_energy, last_total_energy):
+async def manage_requests_and_offers(
+    locker, concentrator, meter: SmartMeter, total_energy, last_total_energy
+):
     if total_energy > 0:
         if last_total_energy < 0:
             last_coins = await get_num_coins_from_neg_total(
-                last_total_energy)  # TODO get_num_coins could be called only once (?)
+                last_total_energy
+            )  # TODO get_num_coins could be called only once (?)
             await locker.send_invalidate_request(concentrator, meter, last_coins)
             last_total_energy = 0
         diff_energy = total_energy - last_total_energy
@@ -54,15 +63,17 @@ async def manage_requests_and_offers(locker, concentrator, meter: SmartMeter, to
         diff_energy = total_energy - last_total_energy
         if diff_energy > 0:
             num_requests_to_invalid = await get_num_coins_from_pos_total(diff_energy)
-            await locker.send_invalidate_request(concentrator, meter, num_requests_to_invalid)
+            await locker.send_invalidate_request(
+                concentrator, meter, num_requests_to_invalid
+            )
         else:
             for _ in range(await get_num_coins_from_neg_total(diff_energy)):
                 await locker.energy_request(concentrator, meter)
 
 
 async def get_total_energy(df, i, isize):
-    current = df.iloc[i * 10: (i + 1) * 10]
-    consumption = current['power_consumption'].sum()
+    current = df.iloc[i * 10 : (i + 1) * 10]
+    consumption = current["power_consumption"].sum()
     production = current.iloc(axis=1)[isize].sum()
     total = production - consumption
     return total
@@ -73,25 +84,35 @@ async def get_total_energy(df, i, isize):
 
 # al no invalidar, s'ha de mirar quantes offerts has demanat
 
+
 def tasks_generator(DATAFRAME, METERS, TYPE_METERS, agg: Concentrator, locker: Locker):
     res = []
     for ((i, meter), type_) in zip(METERS.items(), TYPE_METERS):
         print(type_)
-        res.append(asyncio.create_task(meter_thread(agg, meter, DATAFRAME, type_, locker)))
+        res.append(
+            asyncio.create_task(meter_thread(agg, meter, DATAFRAME, type_, locker))
+        )
     return res
 
 
 async def main(locker: Locker):
-    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-    CONFIG = toml.load('config.toml')
-    TYPE_METERS = reduce(lambda x, y: x + y, map(lambda x: [x[0] for _ in range(x[1])], CONFIG['environment'].items()))
+    logging.basicConfig(filename="example.log", encoding="utf-8", level=logging.DEBUG)
+    CONFIG = toml.load("config.toml")
+    TYPE_METERS = reduce(
+        lambda x, y: x + y,
+        map(lambda x: [x[0] for _ in range(x[1])], CONFIG["environment"].items()),
+    )
     NUM_METERS = len(TYPE_METERS)
-    DATAFRAME = pd.read_csv(CONFIG['consumption'], index_col=0)
+    DATAFRAME = pd.read_csv(CONFIG["consumption"], index_col=0)
 
-    privRSA, pubRSA = get_pub_priv_keys(*CONFIG['crypt'].values())
+    privRSA, pubRSA = get_pub_priv_keys(*CONFIG["crypt"].values())
     concentrator = Concentrator(privRSA)
-    METERS = dict(map(lambda x: (x[0], add_coins_to_smart_meter(x[1], concentrator, 5)),
-                      zip(range(NUM_METERS), smart_meters(pubRSA))))
+    METERS = dict(
+        map(
+            lambda x: (x[0], add_coins_to_smart_meter(x[1], concentrator, 5)),
+            zip(range(NUM_METERS), smart_meters(pubRSA)),
+        )
+    )
     sms = list(METERS.values())
 
     for task in tasks_generator(DATAFRAME, METERS, TYPE_METERS, concentrator, locker):
