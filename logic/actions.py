@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 
@@ -11,27 +12,26 @@ class Locker:
         self.lock = asyncio.Lock()
 
     async def send_invalidate_request(
-        self, agg: Concentrator, meter: SmartMeter, last_coins: int
+            self, agg: Concentrator, meter: SmartMeter, last_coins: int
     ):
-        for i in range(last_coins):
-            logging.info("Invalidate request from", meter.id)
+        logging.info("Invalidate {} request from {} {}".format(last_coins, meter.id, len(meter.current_requests)))
+        for _ in range(last_coins):
             invalidation: InvalidationRequest = meter.create_invalidation_request()
             async with self.lock:
                 ack = agg.receive_invalidation_request(invalidation)
             meter.check_invalidation_request(invalidation, ack)
 
     async def send_invalidate_offer(
-        self, agg: Concentrator, meter: SmartMeter, last_coins: int
+            self, agg: Concentrator, meter: SmartMeter, last_coins: int
     ):
         for i in range(last_coins):
-            logging.info(f"Invalidate offer from {meter.id}")
             invalidation = meter.create_invalidation_offer()
             async with self.lock:
                 ack = agg.receive_invalidation_offer(invalidation)
             meter.check_invalidation_offer(invalidation, ack)
 
     async def energy_matching(
-        self, concentrator: Concentrator, producer: SmartMeter, consumer: SmartMeter
+            self, concentrator: Concentrator, producer: SmartMeter, consumer: SmartMeter
     ):
         logging.info(f"Energy Matching. Producer: {producer} // Consumer: {consumer}")
         async with self.lock:
@@ -57,8 +57,11 @@ class Locker:
         async with self.lock:
             concentrator.add_offer(offer)
 
-    async def write_coins(self, i, meter):
+    async def write_coins(self, i, meter: SmartMeter):
         async with self.lock:
+            if not os.path.exists("coins.csv"):
+                with open("coins.csv", 'w') as file_coins:
+                    file_coins.write("{},{},{},{},{}\n".format("id", "i", "coins", "offers", "requests"))
             with open("coins.csv", "a") as file_coins:
                 file_coins.write(
                     f"{meter.id},{i},{len(meter.coins)},{len(meter.current_offers)},{len(meter.current_requests)}\n"

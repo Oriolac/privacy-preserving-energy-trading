@@ -32,7 +32,7 @@ class SmartMeter:
 
     def get_pub_msg(self, message):
         self.randint = (randint(3, 50)) % self.rsa.N
-        return self.rsa.hash(message) * (self.randint**self.rsa.pub) % self.rsa.N
+        return self.rsa.hash(message) * (self.randint ** self.rsa.pub) % self.rsa.N
 
     def get_sign(self, pseudo_sign):
         _, inv_int, _ = xgcd(self.randint, self.rsa.N)
@@ -60,12 +60,12 @@ class SmartMeter:
         assert (public * private) % self.rsa.phi == 1
         # Must save producer as a dict of (i, prod)
         self.prod[i] = Producer(self.rsa.N, private, public)
-        offer = Offer(i, self.rsa.N, public)
+        offer = Offer(i, self.rsa.N, public, self.id)
         self.current_offers[offer.id] = offer
         return offer
 
     def generate_request(self, j):
-        req = Request(j)
+        req = Request(j, self.id)
         self.current_requests[req.id] = req
         return req
 
@@ -118,7 +118,7 @@ class Concentrator:
     last_request_id = 0
 
     def pseudo_sign(self, m):
-        return (m**self.rsa.priv) % self.rsa.N
+        return (m ** self.rsa.priv) % self.rsa.N
 
     def get_last_offer(self) -> int:
         return self.last_offer_id
@@ -135,11 +135,13 @@ class Concentrator:
         # Check request.id is not in requests
         self.requests[request.id] = request
         self.last_request_id += 1
-
+    
     def generate_pairing(self):
         if len(self.offers) == 0 and len(self.requests) == 0:
             return None
-        return Pairing(self.offers[0], self.requests[0])
+        offer_id = set(self.offers).pop()
+        request_id = set(self.requests).pop()
+        return Pairing(self.offers[offer_id], self.requests[request_id])
 
     def checks_receipt(self, payment_receipt, offer_receipt):
         res = payment_receipt == offer_receipt

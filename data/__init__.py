@@ -19,6 +19,7 @@ class Offer:
     id: int
     N: int
     public_key: Any
+    meter_id: int
 
     def encrypt_coin(self, coin) -> Tuple[int, int]:
         return (
@@ -34,6 +35,7 @@ class Offer:
 @dto.dataclass
 class Request:
     id: int
+    meter_id: int
 
 
 @dto.dataclass

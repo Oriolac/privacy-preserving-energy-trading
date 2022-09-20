@@ -9,6 +9,7 @@ async def get_num_coins_from_pos_total(total) -> int:
     :param total: energy
     :return:
     """
+    assert total >= 0, total
     return int(total // 10)
 
 
@@ -18,6 +19,7 @@ async def get_num_coins_from_neg_total(total) -> int:
     :param total: energy that the houeshold needed
     :return:
     """
+    assert total <= 0, total
     return int(math.ceil((-total) / 10))
 
 
